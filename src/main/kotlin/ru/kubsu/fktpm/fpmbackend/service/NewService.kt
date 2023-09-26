@@ -2,6 +2,7 @@ package ru.kubsu.fktpm.fpmbackend.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.persistence.Entity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service

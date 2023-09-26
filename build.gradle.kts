@@ -27,7 +27,8 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.core:jackson-databind")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.5.1")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.flywaydb:flyway-core")
