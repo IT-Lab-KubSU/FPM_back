@@ -5,19 +5,30 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
+import ru.kubsu.fktpm.fpmbackend.dto.Page
+import kotlin.math.ceil
 
 
 interface NewCommon {
     val title: String
     val text: String
     val images: List<String>
+    val status: Boolean
 }
+
+data class NewRequest(
+    override val title: String,
+    override val text: String,
+    override val images: List<String>,
+    override val status: Boolean,
+) : NewCommon
 
 data class New(
     val id: Long,
     override val title: String,
     override val text: String,
     override val images: List<String>,
+    override val status: Boolean,
     val creationTime: Long
 ) : NewCommon
 
@@ -27,16 +38,14 @@ class NewService {
     lateinit var jdbcTemplate: JdbcTemplate
     val objectMapper = ObjectMapper()
 
-    fun createNew(new: NewCommon) {
-        val jsonImages = objectMapper.writeValueAsString(new.images)
-
-        val sql = "INSERT INTO news (title, text, images) VALUES (?, ?, ?::jsonb)"
-
+    fun createNew(new: NewRequest) {
+        val sql = "INSERT INTO news (title, text, images, status) VALUES (?, ?, ?::jsonb, ?)"
         jdbcTemplate.update(
             sql,
             new.title,
             new.text,
-            jsonImages,
+            objectMapper.writeValueAsString(new.images),
+            new.status
         )
     }
 
@@ -50,6 +59,7 @@ class NewService {
                     rs.getString("title"),
                     rs.getString("text"),
                     objectMapper.readValue(rs.getString("images"), object : TypeReference<List<String>>() {}),
+                    rs.getBoolean("status"),
                     rs.getLong("creation_time")
                 )
             }
@@ -58,18 +68,22 @@ class NewService {
         }
     }
 
-    fun getNews(limit: Int, page: Int): MutableList<New> {
-        val sql = "SELECT * FROM news LIMIT ? OFFSET ?"
+    fun getNews(limit: Int, page: Int): Page<New> {
+        val sql = "SELECT * FROM news ORDER BY news.id DESC LIMIT ? OFFSET ?"
 
-        return jdbcTemplate.query(sql, arrayOf(limit, page * limit)) { rs, _ ->
+        val news = jdbcTemplate.query(sql, arrayOf(limit, page * limit)) { rs, _ ->
             New(
                 rs.getLong("id"),
                 rs.getString("title"),
                 rs.getString("text"),
                 objectMapper.readValue(rs.getString("images"), object : TypeReference<List<String>>() {}),
+                rs.getBoolean("status"),
                 rs.getLong("creation_time")
             )
         }
+        val count = jdbcTemplate.queryForObject("SELECT count(id) FROM news", Long::class.java) ?: 0
+
+        return Page(news, page, limit, ceil(count.toDouble() / limit).toInt(), count)
     }
 
     fun updateNew(new: New) {

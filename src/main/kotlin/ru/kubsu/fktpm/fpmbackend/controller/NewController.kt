@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import ru.kubsu.fktpm.fpmbackend.service.New
-import ru.kubsu.fktpm.fpmbackend.service.NewCommon
+import ru.kubsu.fktpm.fpmbackend.service.NewRequest
 import ru.kubsu.fktpm.fpmbackend.service.NewService
 
 @Tag(name = "News", description = "News endpoints")
@@ -13,7 +13,7 @@ import ru.kubsu.fktpm.fpmbackend.service.NewService
 @RequestMapping("/news")
 class NewController(@Autowired val newService: NewService) {
     @PostMapping
-    fun createNew(new: NewCommon) = newService.createNew(new)
+    fun createNew(@RequestBody new: NewRequest) = newService.createNew(new)
 
     @GetMapping("/{id}")
     fun getNewById(@PathVariable("id") id: Long) = newService.getNewById(id)
@@ -25,8 +25,8 @@ class NewController(@Autowired val newService: NewService) {
     ) = newService.getNews(limit, page)
 
     @PutMapping
-    fun updateNew(new: New) = newService.updateNew(new)
+    fun updateNew(@RequestBody new: New) = newService.updateNew(new)
 
-    @DeleteMapping
-    fun deleteNew(id: Long) = newService.deleteNew(id)
+    @DeleteMapping("/{id}")
+    fun deleteNew(@PathVariable("id") id: Long) = newService.deleteNew(id)
 }
