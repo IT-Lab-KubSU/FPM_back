@@ -5,5 +5,5 @@ CREATE TABLE news
     text          TEXT         NOT NULL,
     images        JSONB,
     status        bool DEFAULT true,
-    creation_time BIGINT DEFAULT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
+    creation_time BIGINT DEFAULT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000
 );

@@ -2,11 +2,11 @@ package ru.kubsu.fktpm.fpmbackend.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import jakarta.persistence.Entity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import ru.kubsu.fktpm.fpmbackend.dto.Page
+import ru.kubsu.fktpm.fpmbackend.dto.SortOrder
 import kotlin.math.ceil
 
 
@@ -24,6 +24,18 @@ data class NewRequest(
     override val status: Boolean,
 ) : NewCommon
 
+enum class NewSortField {
+    ID, TITLE, STATUS, CREATION_TIME
+}
+
+data class NewsFilter(
+    val limit: Int,
+    val page: Int,
+    val sortField: NewSortField? = NewSortField.ID,
+    val sortOrder: SortOrder? = SortOrder.DESC,
+    val search: String? = ""
+)
+
 data class New(
     val id: Long,
     override val title: String,
@@ -39,18 +51,14 @@ class NewService {
     lateinit var jdbcTemplate: JdbcTemplate
     val objectMapper = ObjectMapper()
 
-    fun createNew(new: NewRequest) {
-        val sql = "INSERT INTO news (title, text, images, status) VALUES (?, ?, ?::jsonb, ?)"
+    fun create(new: NewRequest) {
+        val sql = "INSERT INTO news (title, text, images, status) VALUES (?::text, ?::text, ?::jsonb, ?)"
         jdbcTemplate.update(
-            sql,
-            new.title,
-            new.text,
-            objectMapper.writeValueAsString(new.images),
-            new.status
+            sql, new.title, new.text, objectMapper.writeValueAsString(new.images), new.status
         )
     }
 
-    fun getNewById(id: Long): New? {
+    fun getById(id: Long): New? {
         val sql = "SELECT * FROM news WHERE id = ?"
 
         return try {
@@ -69,10 +77,19 @@ class NewService {
         }
     }
 
-    fun getNews(limit: Int, page: Int): Page<New> {
-        val sql = "SELECT * FROM news ORDER BY news.id DESC LIMIT ? OFFSET ?"
+    fun getWithFilter(filter: NewsFilter): Page<New> {
+        val safeSort = "${filter.sortField.toString().lowercase()} ${filter.sortOrder}, id DESC"
 
-        val news = jdbcTemplate.query(sql, arrayOf(limit, page * limit)) { rs, _ ->
+        val count = jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM news WHERE title ILIKE CONCAT('%', ?::text, '%')", Long::class.java, filter.search
+        )
+        if (count == 0L)
+            return Page(arrayListOf(), filter.page, filter.limit, 0, 0)
+
+        val sql = "SELECT * FROM news WHERE title ILIKE CONCAT('%', ?::text, '%') ORDER BY $safeSort LIMIT ? OFFSET ?"
+
+
+        val news = jdbcTemplate.query(sql, arrayOf(filter.search, filter.limit, filter.page * filter.limit)) { rs, _ ->
             New(
                 rs.getLong("id"),
                 rs.getString("title"),
@@ -82,27 +99,32 @@ class NewService {
                 rs.getLong("creation_time")
             )
         }
-        val count = jdbcTemplate.queryForObject("SELECT count(id) FROM news", Long::class.java) ?: 0
 
-        return Page(news, page, limit, ceil(count.toDouble() / limit).toInt(), count)
+        return Page(news, filter.page, filter.limit, ceil(count.toDouble() / filter.limit).toInt(), count)
     }
 
-    fun updateNew(new: New) {
-        val sql = "UPDATE news SET title = ?, text = ?, images = ?::jsonb, creation_time = ? WHERE id = ?"
+    fun update(new: New) {
+        val sql = "UPDATE news SET title = ?, text = ?, images = ?::jsonb, status = ? WHERE id = ?"
 
         jdbcTemplate.update(
             sql,
             new.title,
             new.text,
-            new.images,
-            new.creationTime,
+            objectMapper.writeValueAsString(new.images),
+            new.status,
             new.id
         )
     }
 
-    fun deleteNew(id: Long) {
+    fun deleteById(id: Long) {
         val sql = "DELETE FROM news WHERE id = ?"
 
         jdbcTemplate.update(sql, id)
+    }
+
+    fun deleteByIds(ids: List<Long>) {
+        val sql = "DELETE FROM news WHERE id = any(?)"
+
+        jdbcTemplate.update(sql, ids.toTypedArray())
     }
 }

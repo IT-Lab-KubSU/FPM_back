@@ -3,30 +3,33 @@ package ru.kubsu.fktpm.fpmbackend.controller
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import ru.kubsu.fktpm.fpmbackend.service.New
-import ru.kubsu.fktpm.fpmbackend.service.NewRequest
 import ru.kubsu.fktpm.fpmbackend.service.NewService
+import ru.kubsu.fktpm.fpmbackend.service.NewRequest
+import ru.kubsu.fktpm.fpmbackend.service.New
+import ru.kubsu.fktpm.fpmbackend.service.NewsFilter
 
 @Tag(name = "News", description = "News endpoints")
 @CrossOrigin
 @RestController
-@RequestMapping("/news")
+@RequestMapping("/api/news")
 class NewController(@Autowired val newService: NewService) {
     @PostMapping
-    fun createNew(@RequestBody new: NewRequest) = newService.createNew(new)
+    fun createNew(@RequestBody new: NewRequest) = newService.create(new)
 
     @GetMapping("/{id}")
-    fun getNewById(@PathVariable("id") id: Long) = newService.getNewById(id)
+    fun getNewById(@PathVariable("id") id: Long) = newService.getById(id)
 
-    @GetMapping
+    @PostMapping("/filter")
     fun getNews(
-        @RequestParam(defaultValue = "50") limit: Int,
-        @RequestParam(defaultValue = "0") page: Int
-    ) = newService.getNews(limit, page)
+        @RequestBody filter: NewsFilter
+    ) = newService.getWithFilter(filter)
 
     @PutMapping
-    fun updateNew(@RequestBody new: New) = newService.updateNew(new)
+    fun updateNew(@RequestBody new: New) = newService.update(new)
 
     @DeleteMapping("/{id}")
-    fun deleteNew(@PathVariable("id") id: Long) = newService.deleteNew(id)
+    fun deleteNew(@PathVariable("id") id: Long) = newService.deleteById(id)
+
+    @DeleteMapping
+    fun deleteNews(@RequestBody ids: List<Long>) = newService.deleteByIds(ids)
 }
