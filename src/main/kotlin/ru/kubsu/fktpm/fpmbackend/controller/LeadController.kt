@@ -3,10 +3,10 @@ package ru.kubsu.fktpm.fpmbackend.controller
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import ru.kubsu.fktpm.fpmbackend.service.Lead
-import ru.kubsu.fktpm.fpmbackend.service.LeadFilter
-import ru.kubsu.fktpm.fpmbackend.service.LeadRequest
-import ru.kubsu.fktpm.fpmbackend.service.LeadService
+import ru.kubsu.fktpm.fpmbackend.service.lead.dto.Lead
+import ru.kubsu.fktpm.fpmbackend.service.lead.dto.LeadFilter
+import ru.kubsu.fktpm.fpmbackend.service.lead.dto.LeadRequest
+import ru.kubsu.fktpm.fpmbackend.service.lead.LeadService
 
 @Tag(name = "Leads", description = "Leads endpoints")
 @CrossOrigin
