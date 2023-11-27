@@ -3,10 +3,10 @@ package ru.kubsu.fktpm.fpmbackend.controller
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import ru.kubsu.fktpm.fpmbackend.service.NewService
-import ru.kubsu.fktpm.fpmbackend.service.NewRequest
-import ru.kubsu.fktpm.fpmbackend.service.New
-import ru.kubsu.fktpm.fpmbackend.service.NewsFilter
+import ru.kubsu.fktpm.fpmbackend.service.news.NewService
+import ru.kubsu.fktpm.fpmbackend.service.news.dto.NewRequest
+import ru.kubsu.fktpm.fpmbackend.service.news.dto.New
+import ru.kubsu.fktpm.fpmbackend.service.news.dto.NewsFilter
 
 @Tag(name = "News", description = "News endpoints")
 @CrossOrigin
